@@ -1,4 +1,4 @@
-from modules import AENet
+from src import DFNet
 def getNet(net_config):
     net_type = net_config['type']
     if net_type in ['AEFC', 'AECV2D', 'AECV3D']:

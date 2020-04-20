@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  7 19:35:59 2019
-
-@author: remus
 """
 
 import torch
 from torch import nn
 import numpy as np
-# https://medium.com/aureliantactics/location-cnn-and-pygame-learning-environment-in-ray-f26c96245eb1
-# https://pytorch.org/docs/master/notes/extending.html#extending-torch-nn
-# https://discuss.pytorch.org/t/how-to-impelement-a-customized-convolutional-layer-conv2d/5799
-# https://github.com/szagoruyko/diracnets/blob/master/diracconv.py
-# https://discuss.pytorch.org/t/custom-a-new-convolution-layer-in-cnn/43682
+
 class CoordConvBase(nn.Module):
-    # Paras copied from conv3d()
     def __init__(self, in_channels, out_channels, kernel_size, stride=1,
                  padding=0, dilation=1, groups=1,
                  bias=True, padding_mode='zeros'):

@@ -1,4 +1,4 @@
-import modules
+import src
 def getModel(net_config, loss_config, device):
     net_type = net_config['type']
     if net_type in ['AEFC', 'AECV2D', 'AECV3D']:
