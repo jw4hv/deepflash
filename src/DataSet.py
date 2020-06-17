@@ -96,7 +96,7 @@ class DataSetDeepPred(Dataset):
         self.source_data = source_data
         self.target_data = target_data
         self.transform= transform
-        # self.dataShape = self.source_data.shape
+        self.dataShape = self.source_data.shape
         
     def __len__(self):
 #        return np.shape(self.data)[2]

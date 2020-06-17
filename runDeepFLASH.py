@@ -5,89 +5,46 @@ from fileIO.io import saveConfig2Json
 from fileIO.io import createExpFolder
 from torch.utils.data import DataLoader
 import SimpleITK as sitk
-
-
-
-
+import os, glob
+import numpy as np
+from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
+def loadDataVol(inputfilepath):
+    SEG, COR, AXI = [0,1,2]
+    targetDim = 2
+    for idx, filename in enumerate (sorted(glob.glob(inputfilepath), key=os.path.getmtime)):
+        img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
+        img = np.rollaxis(img, 0, 3)
+        temp = convertTensorformat(img,
+                                sourceFormat = 'single3DGrayscale', 
+                                targetFormat = 'tensorflow', 
+                                targetDim = targetDim, 
+                                sourceSliceDim = AXI)      
+        if idx == 0:        
+            outvol = temp
+        else:
+            outvol  = np.concatenate((outvol , temp), axis=0)
+    return outvol
+    # outvol = input_src_data
 
 def runExp(config):
     #%% 1. Set configration and device    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-    # Create experiment result folder    
-    # expPath, expName = createExpFolder(resultPath, configName, create_subFolder=True, addDate = addDate)
-    # saveConfig2Json(config, expPath + '/config.json')
 
     #%% 2. Set Data
     import numpy as np
     from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
 
-    # Load training and valid data
+    # Load training data
     SEG, COR, AXI = [0,1,2]
-    targetDim = 3
+    targetDim = 2
     import os, glob
-    #os.chdir("./data/Spatial") #Spatial data path
-    os.chdir("./data/")   # Fourier Data path
-    for idx, filename in enumerate (sorted(glob.glob("SourceBrain/*_src.mhd"), key=os.path.getmtime)):
-        
-        img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
-        img = np.rollaxis(img, 0, 3)
-        
-        temp = convertTensorformat(img,
-                                sourceFormat = 'single3DGrayscale', 
-                                targetFormat = 'tensorflow', 
-                                targetDim = targetDim, 
-                                sourceSliceDim = AXI)
-
-        
-        if idx == 0:        
-            input_src_data = temp
-        else:
-            input_src_data = np.concatenate((input_src_data, temp), axis=0)
-        print(np.shape(input_src_data[0]))
-        # outfile = './%d.mhd' %idx
-        # im = sitk.GetImageFromArray(input_src_data[idx], isVector=False)
-        # sitk.WriteImage(im, outfile, True) 
-    for idx, filename in enumerate (sorted(glob.glob("TargetBrain/*_tar.mhd"), key=os.path.getmtime)):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
-        img = np.rollaxis(img, 0, 3)
-        temp2 = convertTensorformat(img,
-                                sourceFormat = 'single3DGrayscale', 
-                                targetFormat = 'tensorflow', 
-                                targetDim = targetDim, 
-                                sourceSliceDim = AXI)
-        if idx == 0:        
-            input_tar_data = temp2
-        else:
-            input_tar_data = np.concatenate((input_tar_data, temp2), axis=0)
-     
-
-    # for idx, filename in enumerate (glob.glob("Fourier/Synthetic/VelocityFourierRealX/*.mhd")):
-    #     img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
-    #     img = np.rollaxis(img, 0, 3)
-    #     temp = convertTensorformat(img,
-    #                             sourceFormat = 'single3DGrayscale', 
-    #                             targetFormat = 'tensorflow', 
-    #                             targetDim = targetDim, 
-    #                             sourceSliceDim = AXI)
-    #     if idx == 0:        
-    #         input_vel_data = temp
-    #     else:
-    #         input_vel_data = np.concatenate((input_vel_data, temp), axis=0)
-    filename="./3Dbrainlabel.txt"
-    data = np.loadtxt(filename, delimiter=" ", 
-                  usecols=[0])
-    print(len(data))
-    for idx in range (0, len(data)):
-        img = data[idx]
-        img = img.reshape(1,1,1,1,1)
-        if idx == 0:        
-            input_vel_data = img
-        else:
-            input_vel_data = np.concatenate((input_vel_data, img), axis=0)
-    # input_vel_data = torch.from_numpy(data).float().to(device)
-    # print (input_vel_data)
-
+    input_src_data = loadDataVol("./data/src_fourier_real/*.mhd")
+    input_tar_data = loadDataVol("./data/tar_fourier_real/*.mhd")
+    input_vel_data_x = loadDataVol("./data/velo_fourier_real/*.mhd")
+    input_vel_data_y = loadDataVol("./data/velo_fourier_real_y/*.mhd")
+    input_vel_data = np.concatenate((input_vel_data_x, input_vel_data_y), axis=3)
+    # print(input_vel_data.shape)
 
     from torchvision import transforms
     from fileIO.io import safeDivide
@@ -110,9 +67,7 @@ def runExp(config):
         if classname.find('Linear') != -1:
             # apply a uniform distribution to the weights and a bias=0
             m.weight.data.uniform_(0.0, 1.0)
-            m.bias.data.fill_(0)
-
-    
+            m.bias.data.fill_(0)   
     deepflashnet = DFModel(net_config = config['net'], 
                         loss_config = config['loss'],
                         device=device)
@@ -120,50 +75,20 @@ def runExp(config):
                         loss_config = config['loss'],
                         device=device)
     #deepflashnet.apply(weights_init_uniform)
-
-    for idx, filename in enumerate (sorted(glob.glob("SourceBrain/*_src.mhd"), key=os.path.getmtime)):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
-        img = np.rollaxis(img, 0, 3)
-        temp = convertTensorformat(img,
-                                sourceFormat = 'single3DGrayscale', 
-                                targetFormat = 'tensorflow', 
-                                targetDim = targetDim, 
-                                sourceSliceDim = AXI)
-        if idx == 0:        
-            pred_src_data = temp
-        else:
-            pred_src_data = np.concatenate((pred_src_data, temp), axis=0)
-
-    for idx, filename in enumerate (sorted(glob.glob("TargetBrain/*_tar.mhd"), key=os.path.getmtime)):
-        img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
-        img = np.rollaxis(img, 0, 3)
-        temp = convertTensorformat(img,
-                                sourceFormat = 'single3DGrayscale', 
-                                targetFormat = 'tensorflow', 
-                                targetDim = targetDim, 
-                                sourceSliceDim = AXI)
-        if idx == 0:        
-            pred_tar_data = temp
-        else:
-            pred_tar_data = np.concatenate((pred_tar_data, temp), axis=0)
-        # outfile = './%d.mhd' %idx
-        # im = sitk.GetImageFromArray(pred_src_data[0], isVector=False)
-        # sitk.WriteImage(im, outfile, True) 
-       
+    #load validation data
+    pred_src_data = loadDataVol("./data/src_fourier_real/*.mhd")
+    pred_tar_data =loadDataVol("./data/tar_fourier_real/*.mhd")
     testing = DataSetDeepPred (source_data = pred_src_data, target_data = pred_tar_data, transform=img_transform, device = device)
-
-
-
 
     #%% 6. Training
     loss = deepflashnet.trainDeepFlash(training_dataset=training, training_config = config['training'], testing_dataset = testing, valid_img= None, expPath = None)
-    deepflashnet.save('./savenet3d.pth')
+    #deepflashnet.save('./savenet3d.pth')
     # torch.save(deepflashnet.state_dict(), '2Dnet')
       
-    deepflashtestnet = DFModel(net_config = config['net'], 
-                        loss_config = config['loss'],
-                        device=device)
-    deepflashtestnet.load('./savenet.pth')
+    # deepflashtestnet = DFModel(net_config = config['net'], 
+    #                     loss_config = config['loss'],
+    #                     device=device)
+    # deepflashtestnet.load('./savenet.pth')
       # 7. Prediction 
     # for idx, filename in enumerate (sorted(glob.glob("Source2DTest/*.mhd"), key=os.path.getmtime)):
     #     img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
@@ -197,7 +122,7 @@ def runExp(config):
     #         pred_tar_data = np.concatenate((pred_tar_data, temp4), axis=0)
 
     # predfeed = DataSetDeepPred (source_data = pred_src_data, target_data = pred_tar_data, transform=img_transform, device = device)
-    # predictions = deepflashnet.pred(predfeed, np.max(data))
+    #predictions = deepflashnet.pred(predfeed, np.max(data))
     # predictions_file = predictions.reshape(201,1)
     # np.savetxt('a.txt',predictions_file,fmt='%f')
     # print (predictions[2])

@@ -178,35 +178,44 @@ def get3DNet(paras):
 ###########################Spatial Net (LEARNING RATE = 1E-2)##########################################
 
 ###########################Fourier Net (LEARNING RATE = 1E-2)##########################################
-        # encoder = nn.Sequential(
-        #     nn.Conv2d(1, 16, 3, stride=1, padding=1, bias = True),  # Large kernel size, large output feature map, and with dense stride
-        #     nn.ReLU(),
-        #     nn.Conv2d(16, 16, 3, stride=1, padding=1, bias = True), 
-        #     nn.ReLU(),
-        #     nn.Conv2d(16, 32, 3, stride=1, padding=1, bias = True), 
-        #     nn.ReLU(),
-        #     nn.Conv2d(32, 64, 3, stride=1, padding=1,bias = True), 
-        #     nn.ReLU(),
-        #     nn.Conv2d(64, 128, 3, stride=1, padding=1, bias = True), 
-        #     nn.ReLU(),
+        encoder = nn.Sequential(
+            nn.Conv2d(1, 16, 3, stride=2, padding=1, bias = True),  # Large kernel size, large output feature map, and with dense stride
+            nn.BatchNorm2d(16),
 
-   
-  
-        # )
-        # decoder = nn.Sequential(
-        #     nn.Conv2d(256, 128, 3, stride=1, padding=1, bias = True),  # 
-        #     nn.ReLU(),
-        #     nn.Conv2d(128, 64, 3, stride=1, padding=1, bias = True),  # 
-        #     nn.ReLU(),
-        #     nn.Conv2d(64, 32, 3, stride=1, padding=1, bias = True), 
-        #     nn.ReLU(),
-        #     nn.Conv2d(32, 8, 3, stride=1, padding=1, bias = True), 
-        #     nn.ReLU(),
-        #     nn.Conv2d(8, 1, 3, stride=1, padding=1,bias = True), 
-        #     nn.ReLU(),
-       
+           
+            nn.Conv2d(16, 16, 3, stride=2, padding=1, bias = True), 
+            nn.BatchNorm2d(16),
+            nn.Dropout(0.2), 
+            nn.Conv2d(16, 32, 3, stride=1, padding=1, bias = True), 
+            nn.BatchNorm2d(32),
+           
+            nn.Conv2d(32, 64, 3, stride=2, padding=1,bias = True), 
+            nn.BatchNorm2d(64),
+            nn.Dropout(0.2), 
+            nn.Conv2d(64, 128, 3, stride=1, padding=1, bias = True), 
+            nn.BatchNorm2d(128),
             
-        # )
+        )
+        decoder = nn.Sequential(
+            nn.Conv2d(256, 128, 3, stride=1, padding=2, bias = True),  # 
+            nn.BatchNorm2d(128),
+           
+
+            nn.Conv2d(128, 64, 3, stride=1, padding=2, bias = True),  # 
+            nn.BatchNorm2d(64),
+            nn.Dropout(0.2), 
+
+            nn.Conv2d(64, 32, 3, stride=1, padding=1, bias = True), 
+            nn.BatchNorm2d(32),
+         
+
+            nn.Conv2d(32, 8, 3, stride=1, padding=1, bias = True), 
+            nn.BatchNorm2d(8),
+         
+            nn.Conv2d(8, 2, 3, stride=1, padding=1,bias = True), 
+            nn.BatchNorm2d(2),
+            
+        )
 ############################### 2D Synthetic Net############################################## 
         # encoder = nn.Sequential(
         #     nn.Conv2d(1, 8, 3, stride=1, padding=1,bias = True),  #   Loss = MSE ; 'batch_size'] = 256 'learning_rate' = 5e-5
@@ -253,103 +262,53 @@ def get3DNet(paras):
         #     # nn.tempsigmoid(out),
         # )
 ##########################2D Brain Net#################################################
-        encoder = nn.Sequential(
-            nn.Conv2d(1, 8, 3, stride=1, padding=1,bias = True),  #   Loss = MSE ; 'batch_size'] = 256 'learning_rate' = 5e-3
-            nn.Dropout(0.2), 
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(8),
-            nn.ReLU(),
-         
-            nn.Conv2d(8, 16, 3, stride=1, padding=1,bias = True),  # 
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-                   
-            nn.Conv2d(16, 8, 3, stride=1, padding=1,bias = True),  # 
-            nn.BatchNorm2d(8),
-            nn.ReLU(),
-
-            nn.Conv2d(8, 1, 3, stride=1, padding=1,bias = True),  # 
-            nn.Dropout(0.2), 
-            nn.BatchNorm2d(1),
-            
-            nn.ReLU(),
-    
-
-        )
-        decoder = nn.Sequential(
-            nn.Conv2d(2, 8, 3, stride=1, padding=1,bias = True),
-            nn.Dropout(0.2), 
-            nn.MaxPool2d(2),
-            nn.BatchNorm2d(8), 
-            nn.ReLU(),
-
-            nn.Conv2d(8, 16, 3, stride=1, padding=1,bias = True),
-            
-            nn.MaxPool2d(3), 
-            nn.BatchNorm2d(16),
-            nn.ReLU(),
-
-            nn.Conv2d(16, 8, 3, stride=1, padding=1,bias = True),
-            
-            nn.MaxPool2d(3), 
-            nn.BatchNorm2d(8),
-            nn.ReLU(),
-
-            nn.Conv2d(8, 1, 3, stride=1, padding=1,bias = True),  
-            nn.BatchNorm2d(1),
-            nn.MaxPool2d(2),  
-            nn.ReLU(),
-            # nn.tempsigmoid(out),
-        )
-##########################3D Brain Net#################################################
         # encoder = nn.Sequential(
-        #     nn.Conv3d(1, 8, 3, stride=1, padding=1,bias = True),  #   Loss = MSE ; 'batch_size'] = 256 'learning_rate' = 5e-3
+        #     nn.Conv2d(1, 8, 3, stride=1, padding=1,bias = True),  #   Loss = MSE ; 'batch_size'] = 256 'learning_rate' = 5e-3
         #     nn.Dropout(0.2), 
-        #     nn.MaxPool3d(2),
-        #     nn.BatchNorm3d(8),
-        #     nn.PReLU(),
+        #     nn.MaxPool2d(2),
+        #     nn.BatchNorm2d(8),
+        #     nn.ReLU(),
          
-        #     nn.Conv3d(8, 16, 3, stride=1, padding=1,bias = True),  # 
-        #     nn.BatchNorm3d(16),
-        #     nn.PReLU(),
+        #     nn.Conv2d(8, 16, 3, stride=1, padding=1,bias = True),  # 
+        #     nn.BatchNorm2d(16),
+        #     nn.ReLU(),
                    
-        #     nn.Conv3d(16, 8, 3, stride=1, padding=1,bias = True),  # 
-        #     nn.BatchNorm3d(8),
-        #     nn.PReLU(),
+        #     nn.Conv2d(16, 8, 3, stride=1, padding=1,bias = True),  # 
+        #     nn.BatchNorm2d(8),
+        #     nn.ReLU(),
 
-        #     nn.Conv3d(8, 1, 3, stride=1, padding=1,bias = True),  # 
+        #     nn.Conv2d(8, 1, 3, stride=1, padding=1,bias = True),  # 
         #     nn.Dropout(0.2), 
-        #     nn.BatchNorm3d(1),
-            
-        #     nn.PReLU(),
+        #     nn.BatchNorm2d(1),
+        #     nn.ReLU(),
     
-
         # )
         # decoder = nn.Sequential(
-        #     nn.Conv3d(2, 8, 3, stride=1, padding=1,bias = True),
+        #     nn.Conv2d(2, 8, 3, stride=1, padding=1,bias = True),
         #     nn.Dropout(0.2), 
-        #     nn.MaxPool3d(2),
-        #     nn.BatchNorm3d(8), 
-        #     nn.PReLU(),
-
-        #     nn.Conv3d(8, 16, 3, stride=1, padding=1,bias = True),
-            
-        #     nn.MaxPool3d(3), 
-        #     nn.BatchNorm3d(16),
-        #     nn.PReLU(),
-
-        #     nn.Conv3d(16, 8, 3, stride=1, padding=1,bias = True),
-            
-        #     nn.MaxPool3d(3), 
-        #     nn.BatchNorm3d(8),
-        #     nn.PReLU(),
-
-        #     nn.Conv3d(8, 1, 3, stride=1, padding=1,bias = True),  
-        #     nn.BatchNorm3d(1),
-        #     nn.MaxPool3d(2),  
+        #     nn.MaxPool2d(2),
+        #     nn.BatchNorm2d(8), 
         #     nn.ReLU(),
+
+        #     nn.Conv2d(8, 16, 3, stride=1, padding=1,bias = True),
+            
+        #     nn.MaxPool2d(3), 
+        #     nn.BatchNorm2d(16),
+        #     nn.ReLU(),
+
+        #     nn.Conv2d(16, 8, 3, stride=1, padding=1,bias = True),
+            
+        #     nn.MaxPool2d(3), 
+        #     nn.BatchNorm2d(8),
+        #     nn.ReLU(),
+
+        #     nn.Conv2d(8, 1, 3, stride=1, padding=1,bias = True),  
+        #     nn.BatchNorm2d(1),
+        #     nn.MaxPool2d(2),  
+        #     nn.ReLU(),
+        #     # nn.tempsigmoid(out),
         # )
-###########################Fourier Net (LEARNING RATE = 1E-2)##########################################
+
     return encoder, decoder
 
 
@@ -375,7 +334,7 @@ if __name__  == '__main__':
     ae = getDFNET(config)
     ae2 = getDFNET(config2)
 #    ae = AE(config = None)
-    data_shape = (1, 1, 128, 128)
+    data_shape = (1, 1, 100, 100)
 #    data_shape = (1, 1, 100, 128, 128)
     src = np.random.rand(*data_shape).astype(np.float32)
     tar = np.random.rand(*data_shape).astype(np.float32)
