@@ -1,10 +1,5 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""
-Created on Tue Jul  2 14:55:43 2019
-
-@author: jrxing
-"""
 
 
 import torch
@@ -26,9 +21,6 @@ class DataSet2D(Dataset):
         self.data = data
 #        self.data = torch.from_numpy(data[:, np.newaxis, :, :])
         self.transform= transform
-#        if transform != None:
-#            self.data = self.transform(self.data)
-#        self.data.to(dtype=torch.float)
         self.dataShape = self.data.shape
     
     def __len__(self):
@@ -36,9 +28,6 @@ class DataSet2D(Dataset):
         return np.shape(self.data)[0]
     
     def __getitem__(self, idx):
-#        sample = self.data[idx, :, :, :]
-#        sample = self.data[idx:idx+1, :, :].astype(np.float32)
-#        sample = self.data[:, :, idx:idx+1].astype(np.float32)
         sample = self.data[idx, :].astype(np.float32)
         if self.transform:
 #            sample = transforms.ToPILImage()(sample)
@@ -57,33 +46,39 @@ class DataSetDeep(Dataset):
     """
     Load in 3D medical image, treate image as a stack of 2D images with given dimension
     """
-    def __init__(self, source_data, target_data, groundtruth,  transform = None, device = torch.device("cpu")):        
+    def __init__(self, source_data_R, target_data_R, groundtruth_R, source_data_I, target_data_I, groundtruth_I,  transform = None, device = torch.device("cpu")):        
         super(DataSetDeep, self).__init__()
-        self.source_data = source_data
-        self.target_data = target_data
-        self.groundtruth = groundtruth
+        self.source_data_R = source_data_R
+        self.target_data_R= target_data_R
+        self.groundtruth_R = groundtruth_R
+
+        self.source_data_I = source_data_I
+        self.target_data_I = target_data_I
+        self.groundtruth_I = groundtruth_I
         self.transform= transform
         
     def __len__(self):
 #        return np.shape(self.data)[2]
-        return np.shape(self.source_data)[0]
+        return np.shape(self.source_data_R)[0]
 
     
     def __getitem__(self, idx):
-#        sample = self.data[idx, :, :, :]
-#        sample = self.data[idx:idx+1, :, :].astype(np.float32)
-#        sample = self.data[:, :, idx:idx+1].astype(np.float32)
-        src_sample = self.source_data[idx, :].astype(np.float32)
-        tar_sample = self.target_data[idx, :].astype(np.float32)
-        gd_sample = self.groundtruth[idx,:].astype(np.float32)
-    
+        src_sample_R = self.source_data_R[idx, :].astype(np.float32)
+        tar_sample_R = self.target_data_R[idx, :].astype(np.float32)
+        gd_sample_R = self.groundtruth_R[idx,:].astype(np.float32)
+        
+        src_sample_I = self.source_data_I[idx, :].astype(np.float32)
+        tar_sample_I = self.target_data_I[idx, :].astype(np.float32)
+        gd_sample_I = self.groundtruth_I[idx,:].astype(np.float32)
         if self.transform:
-#            sample = transforms.ToPILImage()(sample)
-            src_sample = self.transform(src_sample)  
-            tar_sample = self.transform(tar_sample)
-            gd_sample = self.transform(gd_sample)
+            src_sample_R = self.transform(src_sample_R)  
+            tar_sample_R = self.transform(tar_sample_R)
+            gd_sample_R = self.transform(gd_sample_R)
+            src_sample_I = self.transform(src_sample_I)  
+            tar_sample_I = self.transform(tar_sample_I)
+            gd_sample_I = self.transform(gd_sample_I)
 
-        sample = {'source': src_sample, 'target': tar_sample,'gtru': gd_sample}
+        sample = {'source_R': src_sample_R, 'target_R': tar_sample_R,'gtru_R': gd_sample_R, 'source_I': src_sample_I, 'target_I': tar_sample_I,'gtru_I': gd_sample_I}
 
         return sample
 
@@ -104,9 +99,6 @@ class DataSetDeepPred(Dataset):
 
     
     def __getitem__(self, idx):
-#        sample = self.data[idx, :, :, :]
-#        sample = self.data[idx:idx+1, :, :].astype(np.float32)
-#        sample = self.data[:, :, idx:idx+1].astype(np.float32)
         src_sample = self.source_data[idx, :].astype(np.float32)
         tar_sample = self.target_data[idx, :].astype(np.float32)
         

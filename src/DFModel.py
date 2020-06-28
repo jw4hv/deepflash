@@ -48,8 +48,6 @@ class DFModel(object):
                 img = data['input'].to(self.device, dtype = torch.float)
                 img1 = data['input'].to(self.device, dtype = torch.float)
                 label = data['gtru'].to(self.device, dtype = torch.float)
-#                print(img.device)
-                #img2 = torch.cat((img, img1), 1)
                 # ===================forward=====================
                 output = self.net(img)
 #               loss = self.criterion(output, img[:,0:1,:,:,:])
@@ -64,49 +62,34 @@ class DFModel(object):
         print('Training finished')
         return loss
 
-    def trainDeepFlash(self, training_dataset, training_config, testing_dataset, valid_img = None, expPath = None):
+    def trainDeepFlash(self, training_dataset, training_config, valid_img = None, expPath = None):
         # Create dataloader
         training_dataloader = DataLoader(training_dataset, batch_size=training_config['batch_size'],
                         shuffle=False)
 
-        # print (training_dataset[0]['gtru'].shape)
-        testing_dataloader = DataLoader(testing_dataset, batch_size=1,
-                        shuffle=False)
- 
-
         # Set Optimizer
         if self.continueTraining == False:        
-            self.optimizer = torch.optim.SGD(self.net.parameters(), lr=training_config['learning_rate'],
+            self.optimizer = torch.optim.Adam(self.net.parameters(), lr=training_config['learning_rate'],
                                 weight_decay=1e-6)
         TotalEnergy = 0
         print("Training started") 
         for j, epoch in enumerate(range(1, training_config['epochs_num']  + 1)):
             for i, data in enumerate(training_dataloader):      
-                img = data['source'].to(self.device, dtype = torch.float)
-                # print (img.shape)
-                img1 = data['target'].to(self.device, dtype = torch.float)
-                #label = (1, 1, 16, 16, 16)
-                label = data['gtru'].to(self.device, dtype = torch.float)
+                img_src_R = data['source_R'].to(self.device, dtype = torch.float)
+                img_tar_R = data['target_R'].to(self.device, dtype = torch.float)
+                label_R = data['gtru_R'].to(self.device, dtype = torch.float)
 
-                # outfile = './out%d.mhd'%i
-                # im = sitk.GetImageFromArray(img[9], isVector=False)
-                # sitk.WriteImage(im, outfile, True) 
-
-                # source = sitk.GetImageFromArray(img, isVector=False)
-                # target = sitk.GetImageFromArray(img1, isVector=False)
-                # sitk.WriteImage(source, './source_%s.mhd'%(j*(training_config['epochs_num'])+i), True)
-                # sitk.WriteImage(target, './target_%s.mhd'%(j*(training_config['epochs_num'])+i), True)
-
-                # print(label.shape)
-#                print(img.device)
-                #img2 = torch.cat((img, img1), 1)
+                img_src_I = data['source_I'].to(self.device, dtype = torch.float)
+                img_tar_I = data['target_I'].to(self.device, dtype = torch.float)
+                label_I = data['gtru_I'].to(self.device, dtype = torch.float)
                 # ===================forward=====================
-                output = self.net(img,img1)
-                #output2 = self.net(img,img1)
-#               loss = self.criterion(output, img[:,0:1,:,:,:])
-                loss1 = self.criterion(output, label)
+                output_R = self.net(img_src_R,img_tar_R)
+                output_I = self.net(img_src_I,img_tar_I)
+                lossR = self.criterion(output_R, label_R)
+                lossI = self.criterion(output_I, label_I)
+                # print(output_R.shape)
                 #loss2 = self.criterion(output2, label)
-                loss = loss1 ; #+loss2;
+                loss = lossR + lossI;
                 # ===================backward====================
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -116,38 +99,16 @@ class DFModel(object):
                 
 
                 if (j%5 == 0) and (i == len(training_dataloader)-1):
+                    pred_R = np.moveaxis(output_R.to(torch.device('cpu')).detach().numpy(),0,-1) 
                     
-                #     # write_file = "output%s.csv"%j
-                #     # with open(write_file, "w") as output:
-                #     #     for idx, line in enumerate(testing_dataloader):
-                #     #         testsrc = line['source'].to(self.device, dtype = torch.float)
-                #     #         testtar = line['target'].to(self.device, dtype = torch.float)
-
-                #     #         # print (testtar.shape)
-                #     #         # outfile = './out%d.mhd'%idx
-                #     #         # im = sitk.GetImageFromArray(testtar, isVector=False)
-                #     #         # sitk.WriteImage(im, outfile, True) 
-
-                #     #         testoutput = self.net(testsrc,testtar)
-                #     #         testoutput = testoutput.to(torch.device('cpu')).detach().numpy()
-                #     #         testsave = testoutput.reshape(1)
-                #     #         output.write(str(testsave)+'\n')
-
-                #     # with open('prediction%s.csv'%j,'wb') as file:
-                #     #     for line in text:
-                #     #         file.write(line)
-                #     #         file.write('\n')
-                #     # print(output.shape)
-                    pred = np.moveaxis(output.to(torch.device('cpu')).detach().numpy(),0,-1) 
+                    pred_R = np.array(pred_R)
+                    print (pred_R.shape)
+                    pred_I = np.moveaxis(output_I.to(torch.device('cpu')).detach().numpy(),0,-1) 
                     # print (pred.shape)
-                    pred = np.array(pred)
-                    print(pred.shape)
-                    im = sitk.GetImageFromArray(pred[:,:,:,0].reshape(2,17,17), isVector=False)
+                    pred_I = np.array(pred_I)
+                    im = sitk.GetImageFromArray(pred_R[:,:,:,0].reshape(3,17,17), isVector=False)
                     sitk.WriteImage(im, './prediction_%s.nii'%j, False)
 
-                    # pred2 = np.moveaxis(label.to(torch.device('cpu')).detach().numpy(),0,-1) 
-                    # im2 = sitk.GetImageFromArray(pred2[:,:,:,0].reshape(17,17), isVector=False)
-                    # sitk.WriteImage(im2, './groundtruth_%s.mhd'%j, True)
             # ===================log========================            
             print(repr(j) + " Epoch:  " + " Energy:  "+ repr(TotalEnergy));
             
@@ -286,18 +247,6 @@ def slice_img(img, config):
                          and 5 ([N,C,D,H,W]) for 3D images, \
                          but got {len(np.shape(img))}')
     return img_sample
-
-#def net_sample_test(net, img, save_filename, save_index = None):
-#    # 1. Go through network
-#    outimg = net(img).to(torch.device('cpu')).detach().numpy()
-#    # 2. Take slice as an image
-#    
-#    # 3. Save slice
-#    outimg = net(img).to(torch.device('cpu')).detach().numpy()
-#    if len(outimg.shape) == 4:
-        
-
-
         
 import torch.nn as nn
 class TVLoss2D(nn.Module):

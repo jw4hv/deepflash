@@ -1,0 +1,10 @@
+ObjectType = Image
+NDims = 3
+BinaryData = True
+BinaryDataByteOrderMSB = False
+Offset = 0 0 0 
+ElementSpacing = 1 1 1 
+DimSize = 17 17 1 
+ElementNumberOfChannels = 1
+ElementType = MET_FLOAT
+ElementDataFile = 1velocityRFY.raw
