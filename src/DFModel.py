@@ -50,7 +50,6 @@ class DFModel(object):
                 label = data['gtru'].to(self.device, dtype = torch.float)
                 # ===================forward=====================
                 output = self.net(img)
-#               loss = self.criterion(output, img[:,0:1,:,:,:])
                 loss = self.criterion(output, label)
                 # ===================backward====================
                 self.optimizer.zero_grad()
@@ -87,27 +86,26 @@ class DFModel(object):
                 output_I = self.net(img_src_I,img_tar_I)
                 lossR = self.criterion(output_R, label_R)
                 lossI = self.criterion(output_I, label_I)
-                # print(output_R.shape)
-                #loss2 = self.criterion(output2, label)
-                loss = lossR + lossI;
+                loss = lossR +lossI;
                 # ===================backward====================
                 self.optimizer.zero_grad()
                 loss.backward()
+                # for p in model.parameters():
+                #     p.grad *= -1.0  # Modify gradient for Imag net
                 self.optimizer.step()
-                #print("LossInBacth"+ repr(i) + "iteration" + repr(loss.detach().numpy()))
                 TotalEnergy += loss.detach().numpy()
                 
 
                 if (j%5 == 0) and (i == len(training_dataloader)-1):
                     pred_R = np.moveaxis(output_R.to(torch.device('cpu')).detach().numpy(),0,-1) 
-                    
+                    output_dim = int(training_config['trunc_dim'])
                     pred_R = np.array(pred_R)
                     print (pred_R.shape)
                     pred_I = np.moveaxis(output_I.to(torch.device('cpu')).detach().numpy(),0,-1) 
                     # print (pred.shape)
                     pred_I = np.array(pred_I)
-                    im = sitk.GetImageFromArray(pred_R[:,:,:,0].reshape(3,17,17), isVector=False)
-                    sitk.WriteImage(im, './prediction_%s.nii'%j, False)
+                    im = sitk.GetImageFromArray(pred_R[:,:,:,0].reshape(3,output_dim +1,output_dim+1), isVector=False)
+                    sitk.WriteImage(im, './validation_%s.nii'%j, False)
 
             # ===================log========================            
             print(repr(j) + " Epoch:  " + " Energy:  "+ repr(TotalEnergy));
@@ -120,16 +118,21 @@ class DFModel(object):
     def pred(self, dataset, scale):
         # Load new data and let go through network
         dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
-        truncdata_shape = (201, 1)
-        predictions = np.zeros(truncdata_shape)
+        # truncdata_shape = (201, 1)
+        # predictions = np.zeros(truncdata_shape)
         for dataIdx, data in enumerate(dataloader):
-            img = data['source'].to(self.device, dtype = torch.float)
-            img1 = data['target'].to(self.device, dtype = torch.float)
+            img_src_R = data['source_R'].to(self.device, dtype = torch.float)
+            img_tar_R = data['target_R'].to(self.device, dtype = torch.float)
+            label_R = data['gtru_R'].to(self.device, dtype = torch.float)
 
-            #print ((self.net(img, img1).to(torch.device('cpu')).detach().numpy())*scale)
-            num =self.net(img, img1).to(torch.device('cpu')).detach().numpy()
-            newnum= num.reshape(1,1)
-            predictions[dataIdx,:] = newnum
+            img_src_I = data['source_I'].to(self.device, dtype = torch.float)
+            img_tar_I = data['target_I'].to(self.device, dtype = torch.float)
+            label_I = data['gtru_I'].to(self.device, dtype = torch.float)
+            pred_R = self.net(img_src_R,img_tar_R).to(torch.device('cpu')).detach().numpy()
+            pred_I = self.net(img_src_I,img_tar_I).to(torch.device('cpu')).detach().numpy()
+            # num =self.net(img, img1).to(torch.device('cpu')).detach().numpy()
+            # newnum= num.reshape(1,1)
+            # predictions[dataIdx,:] = newnum
             # outfile = './src%d.mhd' %dataIdx
             # im = sitk.GetImageFromArray(img.reshape(100,100), isVector=False)
             # sitk.WriteImage(im, outfile, True) 
@@ -141,7 +144,7 @@ class DFModel(object):
             # predictions[dataIdx,:] = prediction
             # im = sitk.GetImageFromArray(prediction.reshape(17,17), isVector=False)
             # sitk.WriteImage(im, './pretest.mhd', True) 
-        return predictions
+        return pred_R, pred_I
     
     def saveLossHistory(self, loss_history, save_filename, report_epochs_num):
         # https://stackoverflow.com/questions/9622163/save-plot-to-image-file-instead-of-displaying-it-using-matplotlib        
@@ -182,9 +185,6 @@ class DFModel(object):
         # 3. Save slice
         plt.imsave(save_filename, np.squeeze(img_sample), cmap='gray')
     
-    def test(self, dataset):
-        # If classification/regression, do pred() and report error
-        pass
     
     def save(self, filename_full):
         # Save trained net parameters to file
@@ -197,7 +197,6 @@ class DFModel(object):
 
     
     def load(self, checkpoint_path):
-        # https://pytorch.org/tutorials/beginner/saving_loading_models.html#saving-loading-a-general-checkpoint-for-inference-and-or-resuming-training
         # Load saved parameters
         self.continueTraining = True
         checkpoint = torch.load(checkpoint_path)
@@ -210,7 +209,6 @@ class DFModel(object):
     
 
 def get_loss(config):
-    # https://blog.csdn.net/gwplovekimi/article/details/85337689
     name = config['name']
     para = config['para']
     if name == 'MSE':

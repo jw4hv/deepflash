@@ -88,7 +88,6 @@ def get3DNet(paras):
         decoder = nn.Sequential(
             nn.ConvTranspose3d(32, 16, 2, stride=2, padding=0),  # b, 16, 5, 5
             nn.ReLU(True),
-#            nn.ConvTranspose2d(8, 1, 2, stride=2, padding=0),  # b, 16, 5, 5
             nn.Conv3d(16, 8, 3, stride=1, padding=1),  # b, 8, 3, 3
             nn.ReLU(True),
             nn.Conv3d(8, 1, 3, stride=1, padding=1),  # b, 8, 3, 3
@@ -109,49 +108,51 @@ def get3DNet(paras):
             nn.Conv3d(8, 1, 3, stride=1, padding=1),  # b, 8, 3, 3
             nn.Tanh(),
         )
-    elif paras['structure'] == 'deepflash':
+    elif paras['structure'] == 'deepflash3D':
        
-###########################Fourier Net (LEARNING RATE = 1E-2)##########################################
-        # encoder = nn.Sequential(
-        #     nn.Conv3d(1, 16, 3, stride=2, padding=2, bias = True),  # Large kernel size, large output feature map, and with dense stride
-        #     nn.BatchNorm3d(16),
-
+###########################3D Net (LEARNING RATE = 1E-2)##########################################
+        encoder = nn.Sequential(
+            nn.Conv3d(1, 16, 3, stride=2, padding=2, bias = True),  # Large kernel size, large output feature map, and with dense stride
+            nn.BatchNorm3d(16),
+        nn.ReLU(),
            
-        #     nn.Conv3d(16, 16, 3, stride=2, padding=1, bias = True), 
-        #     nn.BatchNorm3d(16),
-        #     nn.Dropout(0.2), 
-        #     nn.Conv3d(16, 32, 3, stride=1, padding=2, bias = True), 
-        #     nn.BatchNorm3d(32),
+            nn.Conv3d(16, 16, 3, stride=2, padding=1, bias = True), 
+            nn.BatchNorm3d(16),
+        nn.ReLU(),
+            nn.Dropout(0.2), 
+            nn.Conv3d(16, 32, 3, stride=1, padding=2, bias = True), 
+            nn.BatchNorm3d(32),
+        nn.ReLU(), 
+            nn.Conv3d(32, 64, 3, stride=2, padding=2,bias = True), 
+            nn.BatchNorm3d(64),
+        nn.ReLU(),
+            nn.Dropout(0.2), 
+            nn.Conv3d(64, 128, 3, stride=2, padding=2, bias = True), 
+            nn.BatchNorm3d(128),
+            nn.ReLU()
+        )
+        decoder = nn.Sequential(
+            nn.Conv3d(256, 128, 3, stride=1, padding=2, bias = True),  # 
+            nn.BatchNorm3d(128),
            
-        #     nn.Conv3d(32, 64, 3, stride=2, padding=2,bias = True), 
-        #     nn.BatchNorm3d(64),
-        #     nn.Dropout(0.2), 
-        #     nn.Conv3d(64, 128, 3, stride=2, padding=2, bias = True), 
-        #     nn.BatchNorm3d(128),
-        #     nn.PReLU()
-        # )
-        # decoder = nn.Sequential(
-        #     nn.Conv3d(256, 128, 3, stride=1, padding=2, bias = True),  # 
-        #     nn.BatchNorm3d(128),
-           
 
-        #     nn.Conv3d(128, 64, 3, stride=1, padding=2, bias = True),  # 
-        #     nn.BatchNorm3d(64),
-        #     nn.Dropout(0.2), 
+            nn.Conv3d(128, 64, 3, stride=1, padding=2, bias = True),  # 
+            nn.BatchNorm3d(64),
+            nn.Dropout(0.2), 
+        nn.ReLU(),
+            nn.Conv3d(64, 32, 3, stride=1, padding=2, bias = True), 
+            nn.BatchNorm3d(32),
+        nn.ReLU(),
 
-        #     nn.Conv3d(64, 32, 3, stride=1, padding=2, bias = True), 
-        #     nn.BatchNorm3d(32),
-         
-
-        #     nn.Conv3d(32, 8, 3, stride=1, padding=1, bias = True), 
-        #     nn.BatchNorm3d(8),
-         
-        #     nn.Conv3d(8, 3, 3, stride=1, padding=1,bias = True), 
-        #     nn.BatchNorm3d(3),
-            
-        # )
-
-##########################2D Brain Net#################################################
+            nn.Conv3d(32, 8, 3, stride=1, padding=1, bias = True), 
+            nn.BatchNorm3d(8),
+        nn.ReLU(),
+            nn.Conv3d(8, 3, 3, stride=1, padding=1,bias = True), 
+            nn.BatchNorm3d(3),
+        nn.ReLU(),
+        )
+    elif paras['structure'] == 'deepflash':
+##########################2D Net#################################################
         encoder = nn.Sequential(
             nn.Conv2d(1, 8, 3, stride=1, padding=1,bias = True),  #   Loss = MSE ; 'batch_size'] = 256 'learning_rate' = 5e-3
             nn.Dropout(0.2), 
@@ -188,7 +189,7 @@ def get3DNet(paras):
             nn.Dropout(0.2),
             nn.PReLU(),
 
-            nn.Conv2d(8, 3, 3, stride=1, padding=1,bias = True),  
+            nn.Conv2d(8, 3, 7, stride=1, padding=1,bias = True),  
             nn.BatchNorm2d(3), 
             nn.PReLU(),
             # nn.tempsigmoid(out),
