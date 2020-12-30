@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib; matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import SimpleITK as sitk
+import torch.nn as nn
 
 class DFModel(object):
     def __init__(self, net_config, loss_config, device = torch.device("cpu")):
@@ -104,14 +105,16 @@ class DFModel(object):
                     # print (pred.shape)
                     pred_I = np.array(pred_I)
                     im = sitk.GetImageFromArray(pred_R[:,:,:,0].reshape(3,output_dim +1,output_dim+1), isVector=False)
-                    sitk.WriteImage(im, './validation_%s.nii'%j, False)
+                    
+                    # sitk.WriteImage(im, './validation_%s.nii'%j, False)
 
             # ===================log========================            
             print(repr(j) + " Epoch:  " + " Energy:  "+ repr(TotalEnergy));
             
 
             TotalEnergy=0
-            # report_epochs_num = training_config.get('report_per_epochs', 10)            
+            # report_epochs_num = training_config.get('report_per_epochs', 10)      
+
         print('Training finished')
         return loss
     def pred(self, dataset, scale):
@@ -122,13 +125,11 @@ class DFModel(object):
         for dataIdx, data in enumerate(dataloader):
             img_src_R = data['source_R'].to(self.device, dtype = torch.float)
             img_tar_R = data['target_R'].to(self.device, dtype = torch.float)
-            label_R = data['gtru_R'].to(self.device, dtype = torch.float)
-
             img_src_I = data['source_I'].to(self.device, dtype = torch.float)
             img_tar_I = data['target_I'].to(self.device, dtype = torch.float)
-            label_I = data['gtru_I'].to(self.device, dtype = torch.float)
             pred_R = self.net(img_src_R,img_tar_R).to(torch.device('cpu')).detach().numpy()
             pred_I = self.net(img_src_I,img_tar_I).to(torch.device('cpu')).detach().numpy()
+
             # num =self.net(img, img1).to(torch.device('cpu')).detach().numpy()
             # newnum= num.reshape(1,1)
             # predictions[dataIdx,:] = newnum
@@ -146,7 +147,6 @@ class DFModel(object):
         return pred_R, pred_I
     
     def saveLossHistory(self, loss_history, save_filename, report_epochs_num):
-        # https://stackoverflow.com/questions/9622163/save-plot-to-image-file-instead-of-displaying-it-using-matplotlib        
         plt.ioff()
         fig, ax = plt.subplots( nrows=1, ncols=1 )
         ax.plot(np.arange(1,(len(loss_history)+1))*report_epochs_num, np.log(loss_history))
@@ -245,53 +245,7 @@ def slice_img(img, config):
                          but got {len(np.shape(img))}')
     return img_sample
         
-import torch.nn as nn
-class TVLoss2D(nn.Module):
-    def __init__(self,TVLoss_weight=1):
-        super(TVLoss2D,self).__init__()
-        self.TVLoss_weight = TVLoss_weight
- 
-    def forward(self, output, truth):
-        # [N, C, H, W]
-        # [N, C, T, H, W]
-        batch_size = output.size()[0]
-        h_x = output.size()[2]
-        w_x = output.size()[3]
-        count_h = self._tensor_size(output[:,:,1:,:])
-        count_w = self._tensor_size(output[:,:,:,1:])
-        h_tv = torch.pow((output[:,:,1:,:]-output[:,:,:h_x-1,:]),2).sum()
-        w_tv = torch.pow((output[:,:,:,1:]-output[:,:,:,:w_x-1]),2).sum()
-        
-        l2_loss = torch.pow(output - truth, 2).sum() / (self._tensor_size(output)*batch_size)
-        tv_loss = (h_tv/count_h+w_tv/count_w)/batch_size
-        return l2_loss + self.TVLoss_weight * tv_loss
-#        return self.TVLoss_weight*2*(h_tv/count_h+w_tv/count_w)/batch_size
- 
-    def _tensor_size(self,t):
-        return t.size()[1]*t.size()[2]*t.size()[3]
+
+
     
-# import torch.nn as nn
-class TVLoss3D(nn.Module):
-    def __init__(self,TV_weight=1):
-        super(TVLoss3D,self).__init__()
-        self.TV_weight = TV_weight
- 
-    def forward(self, output, truth):
-        # [N, C, H, W]
-        # [N, C, T, H, W]
-        N, C, D, H, W = output.shape
-        count_d = self._tensor_size(output[:,:,1:,:,:])
-        count_h = self._tensor_size(output[:,:,:,1:,:])
-        count_w = self._tensor_size(output[:,:,:,:,1:])
-        
-        d_tv = torch.pow((output[:,1:,:,:]-output[:,:,:D-1,:,:]),2).sum()
-        h_tv = torch.pow((output[:,:,1:,:]-output[:,:,:,:H-1,:]),2).sum()
-        w_tv = torch.pow((output[:,:,:,1:]-output[:,:,:,:,:W-1]),2).sum()
-        
-        l2_loss = torch.pow(output - truth, 2).sum() / (self._tensor_size(output)*N)
-        tv_loss = (d_tv/count_d + h_tv/count_h + w_tv/count_w)/N
-        return l2_loss + self.TV_weight * tv_loss
-#        return self.TVLoss_weight*2*(h_tv/count_h+w_tv/count_w)/batch_size
- 
-    def _tensor_size(self,t):
-        return t.size()[1]*t.size()[2]*t.size()[3]
+

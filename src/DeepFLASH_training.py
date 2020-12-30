@@ -5,14 +5,11 @@ currentdir = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(currentdir)
 sys.path.append(parentdir)
 from configs.getConfig import getConfig
-from fileIO.io import saveConfig2Json
-from fileIO.io import createExpFolder
 from torch.utils.data import DataLoader
 import SimpleITK as sitk
 import os, glob
 import numpy as np
 from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
-
 
 def loadDataVol(inputfilepath):
     SEG, COR, AXI = [0,1,2]
@@ -30,30 +27,23 @@ def loadDataVol(inputfilepath):
         else:
             outvol  = np.concatenate((outvol , temp), axis=0)
     return outvol
-    # outvol = input_src_data
 
 def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarimag, velximag, velyimag, velzimag):
     #1. Set configration and device    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-
-
     #2. Set Data
     import numpy as np
     from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
-
     #3. Load training data
     SEG, COR, AXI = [0,1,2]
     targetDim = 2
-
     ##################LOAD REAL NET DATA##########################
-
     input_src_data_R = loadDataVol(srcreal)
     input_tar_data_R = loadDataVol(tarreal)
     input_vel_data_x = loadDataVol(velxreal)
     input_vel_data_y = loadDataVol(velyreal)
     input_vel_data_z = loadDataVol(velzreal)
     input_vel_data_R = np.concatenate((input_vel_data_x, input_vel_data_y,input_vel_data_z ), axis=3)
-
     ##################LOAD IMAG NET DATA##########################
     input_src_data_I = loadDataVol(srcimag)
     input_tar_data_I = loadDataVol(tarimag)
@@ -61,8 +51,7 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     input_vel_data_y_I = loadDataVol(velyimag)
     input_vel_data_z_I = loadDataVol(velzimag)
     input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_y_I ), axis=3)
-    print ('Data loaded!')
-    
+    print ('Training Data loaded!')
     from torchvision import transforms
     from fileIO.io import safeDivide
     #4. Add transformation
@@ -89,20 +78,19 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     deepflashnet = DFModel(net_config = config['net'], 
                         loss_config = config['loss'],
                         device=device)
-    deepflashtestnet = DFModel(net_config = config['net'], 
-                        loss_config = config['loss'],
-                        device=device)
-
-    #%% 6. Training and Validation
+    #6. Training and Validation
     loss = deepflashnet.trainDeepFlash(training_dataset=training, training_config = config['training'], valid_img= None, expPath = None)
-    # #%% 7. Testing
-    # predictions = deepflashtestnet.pred(dataset= testing, scale = 1)
+    #7. check point file saving
+    model_save_path = './save_trained_model/'
+    if not os.path.exists(model_save_path ):
+        os.makedirs(model_save_path)
+    path = model_save_path + 'saved_model.pth'
+    deepflashnet.save(path)
+    
 if __name__ == "__main__":
-
     configName = 'deepflash'
     config = getConfig(configName)
     parser = argparse.ArgumentParser()
-
     parser.add_argument('--im_src_realpart', type=str, help="root directory of real parts of source images")
     parser.add_argument('--im_tar_realpart', type=str, help="root directory of real parts of target images")
     parser.add_argument('--im_vel_realX', type=str, help="root directory of real parts of velocity fields (X direction)")

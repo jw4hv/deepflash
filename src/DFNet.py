@@ -60,17 +60,6 @@ class DeepFlash(nn.Module):
         x3 = self.decoder(x3)
         # x3 = 12 *x3
         return x3    
-
-# class weightedTanh(nn.Module):
-#     def __init__(self, weights = 1):
-#         super().__init__()
-#         self.weights = weights
-        
-#     def forward(self, input):
-#         ex = torch.exp(2*self.weights*input)
-#         return (ex-1)/(ex+1)
-
-
 def get3DNet(paras):
     if paras == None or paras['structure'] == 'default':        
         encoder = nn.Sequential(

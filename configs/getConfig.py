@@ -24,11 +24,6 @@ def getConfig(name):
                             'structure': 'default',
                             'batchNorm': False
                                 }
-                        # 'paras': {
-                        #     'structure': 'decreasing',
-                        #     'batchNorm': True,
-                        #     'root_feature_num':16
-                        #         }
                      },
                 'training':{
                         'epochs_num': 10,
@@ -63,7 +58,7 @@ def getConfig(name):
         ae_config['data']['augmentation'] = None
         ae_config['net']['type'] = 'DF'
         ae_config['net']['paras']['structure']  = 'deepflash'
-        ae_config['training']['epochs_num'] = 500
+        ae_config['training']['epochs_num'] = 5
         ae_config['training']['batch_size'] = 1
         ae_config['training']['trunc_dim'] = 16
         ae_config['training']['learning_rate'] = 5e-3

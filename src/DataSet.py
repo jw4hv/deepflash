@@ -86,28 +86,33 @@ class DataSetDeepPred(Dataset):
     """
     Load in 3D medical source target for predicting
     """
-    def __init__(self, source_data, target_data, transform = None, device = torch.device("cpu")):        
+    def __init__(self, source_data_R, target_data_R, source_data_I, target_data_I,transform = None, device = torch.device("cpu")):        
         super(DataSetDeepPred, self).__init__()
-        self.source_data = source_data
-        self.target_data = target_data
+        self.source_data_R = source_data_R
+        self.target_data_R= target_data_R
+        self.source_data_I = source_data_I
+        self.target_data_I = target_data_I
         self.transform= transform
-        self.dataShape = self.source_data.shape
-        
+
     def __len__(self):
 #        return np.shape(self.data)[2]
-        return np.shape(self.source_data)[0]
+        return np.shape(self.source_data_R)[0]
 
     
     def __getitem__(self, idx):
-        src_sample = self.source_data[idx, :].astype(np.float32)
-        tar_sample = self.target_data[idx, :].astype(np.float32)
+        src_sample_R = self.source_data_R[idx, :].astype(np.float32)
+        tar_sample_R = self.target_data_R[idx, :].astype(np.float32)
+        src_sample_I = self.source_data_I[idx, :].astype(np.float32)
+        tar_sample_I = self.target_data_I[idx, :].astype(np.float32)
         
         if self.transform:
-#            sample = transforms.ToPILImage()(sample)
-            src_sample = self.transform(src_sample)  
-            tar_sample = self.transform(tar_sample)
+            src_sample_R = self.transform(src_sample_R)  
+            tar_sample_R = self.transform(tar_sample_R)
+            src_sample_I = self.transform(src_sample_I)  
+            tar_sample_I = self.transform(tar_sample_I)
+            
 
-        sample = {'source': src_sample, 'target': tar_sample}
+        sample = {'source_R': src_sample_R, 'target_R': tar_sample_R,'source_I': src_sample_I, 'target_I': tar_sample_I}
 
         return sample
 
