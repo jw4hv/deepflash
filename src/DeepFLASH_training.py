@@ -46,13 +46,14 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     targetDim = 2
 
     ##################LOAD REAL NET DATA##########################
+
     input_src_data_R = loadDataVol(srcreal)
     input_tar_data_R = loadDataVol(tarreal)
     input_vel_data_x = loadDataVol(velxreal)
     input_vel_data_y = loadDataVol(velyreal)
     input_vel_data_z = loadDataVol(velzreal)
     input_vel_data_R = np.concatenate((input_vel_data_x, input_vel_data_y,input_vel_data_z ), axis=3)
-    
+
     ##################LOAD IMAG NET DATA##########################
     input_src_data_I = loadDataVol(srcimag)
     input_tar_data_I = loadDataVol(tarimag)
@@ -60,7 +61,7 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     input_vel_data_y_I = loadDataVol(velyimag)
     input_vel_data_z_I = loadDataVol(velzimag)
     input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_y_I ), axis=3)
-
+    print ('Data loaded!')
     
     from torchvision import transforms
     from fileIO.io import safeDivide
@@ -94,8 +95,8 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
 
     #%% 6. Training and Validation
     loss = deepflashnet.trainDeepFlash(training_dataset=training, training_config = config['training'], valid_img= None, expPath = None)
-    #%% 7. Testing
-    predictions = deepflashtestnet.pred(dataset= testing, scale = 1)
+    # #%% 7. Testing
+    # predictions = deepflashtestnet.pred(dataset= testing, scale = 1)
 if __name__ == "__main__":
 
     configName = 'deepflash'
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     parser.add_argument('--im_vel_imagX', type=str, help="root directory of imaginary parts of source images (X direction)")
     parser.add_argument('--im_vel_imagY', type=str, help="root directory of imaginary parts of velocity fields (Y direction)")
     parser.add_argument('--im_vel_imagZ', type=str, help="root directory of imaginary parts of velocity fields (Z direction)")
-    args, unknown = parser.parse_known_args()
+    args,unknown= parser.parse_known_args()
     runExp(config, args.im_src_realpart, args.im_tar_realpart, args.im_vel_realX, args.im_vel_realY,args.im_vel_realZ, \
         args.im_src_imaginarypart, args.im_tar_imaginarypart, args.im_vel_imagX, args.im_vel_imagY,args.im_vel_imagZ)
 

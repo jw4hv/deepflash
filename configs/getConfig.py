@@ -65,6 +65,7 @@ def getConfig(name):
         ae_config['net']['paras']['structure']  = 'deepflash'
         ae_config['training']['epochs_num'] = 500
         ae_config['training']['batch_size'] = 1
+        ae_config['training']['trunc_dim'] = 16
         ae_config['training']['learning_rate'] = 5e-3
         ae_config['loss']['name'] = 'MSE'
         ae_config['training']['report_per_epochs'] = 1
