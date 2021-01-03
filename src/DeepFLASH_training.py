@@ -11,9 +11,8 @@ import os, glob
 import numpy as np
 from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
 
-def loadDataVol(inputfilepath):
+def loadDataVol(inputfilepath, targetDim):
     SEG, COR, AXI = [0,1,2]
-    targetDim = 2
     for idx, filename in enumerate (sorted(glob.glob(inputfilepath), key=os.path.getmtime)):
         img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
         img = np.rollaxis(img, 0, 3)
@@ -26,9 +25,10 @@ def loadDataVol(inputfilepath):
             outvol = temp
         else:
             outvol  = np.concatenate((outvol , temp), axis=0)
+
     return outvol
 
-def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarimag, velximag, velyimag, velzimag):
+def runExp(config, srcreal, tarreal, velxreal, velyreal, velzreal, srcimag, tarimag, velximag, velyimag, velzimag):
     #1. Set configration and device    
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     #2. Set Data
@@ -36,26 +36,30 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
     #3. Load training data
     SEG, COR, AXI = [0,1,2]
-    targetDim = 2
+    ##################Determine using 3D network or 2D network####
+    if(config['net']['paras']['structure'] =='deepflash3D'):
+        targetDim = 3 
+    else:
+        targetDim = 2
     ##################LOAD REAL NET DATA##########################
-    input_src_data_R = loadDataVol(srcreal)
-    input_tar_data_R = loadDataVol(tarreal)
-    input_vel_data_x = loadDataVol(velxreal)
-    input_vel_data_y = loadDataVol(velyreal)
-    input_vel_data_z = loadDataVol(velzreal)
-    input_vel_data_R = np.concatenate((input_vel_data_x, input_vel_data_y,input_vel_data_z ), axis=3)
+    input_src_data_R = loadDataVol(srcreal,targetDim)
+    input_tar_data_R = loadDataVol(tarreal,targetDim)
+    input_vel_data_x = loadDataVol(velxreal,targetDim)
+    input_vel_data_y = loadDataVol(velyreal,targetDim)
+    input_vel_data_z = loadDataVol(velzreal,targetDim)
+    input_vel_data_R = np.concatenate((input_vel_data_x, input_vel_data_y,input_vel_data_z ), axis = targetDim+1)
+    print (input_vel_data_R.shape)
     ##################LOAD IMAG NET DATA##########################
-    input_src_data_I = loadDataVol(srcimag)
-    input_tar_data_I = loadDataVol(tarimag)
-    input_vel_data_x_I = loadDataVol(velximag)
-    input_vel_data_y_I = loadDataVol(velyimag)
-    input_vel_data_z_I = loadDataVol(velzimag)
-    input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_y_I ), axis=3)
+    input_src_data_I = loadDataVol(srcimag,targetDim)
+    input_tar_data_I = loadDataVol(tarimag,targetDim)
+    input_vel_data_x_I = loadDataVol(velximag,targetDim)
+    input_vel_data_y_I = loadDataVol(velyimag,targetDim)
+    input_vel_data_z_I = loadDataVol(velzimag,targetDim)
+    input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_y_I ), axis = targetDim+1)
     print ('Training Data loaded!')
     from torchvision import transforms
     from fileIO.io import safeDivide
     #4. Add transformation
-    #xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) - 0.5
     xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) 
     trans3DTF2Torch = lambda img: np.moveaxis(img, -1, 0)
     img_transform = transforms.Compose([
@@ -88,9 +92,10 @@ def runExp(config, srcreal, tarreal, velxreal,velyreal, velzreal, srcimag, tarim
     deepflashnet.save(path)
     
 if __name__ == "__main__":
-    configName = 'deepflash'
-    config = getConfig(configName)
+
     parser = argparse.ArgumentParser()
+    parser.add_argument('--network_type', type=str, help="choosing 2D or 3D network")
+
     parser.add_argument('--im_src_realpart', type=str, help="root directory of real parts of source images")
     parser.add_argument('--im_tar_realpart', type=str, help="root directory of real parts of target images")
     parser.add_argument('--im_vel_realX', type=str, help="root directory of real parts of velocity fields (X direction)")
@@ -103,6 +108,8 @@ if __name__ == "__main__":
     parser.add_argument('--im_vel_imagY', type=str, help="root directory of imaginary parts of velocity fields (Y direction)")
     parser.add_argument('--im_vel_imagZ', type=str, help="root directory of imaginary parts of velocity fields (Z direction)")
     args,unknown= parser.parse_known_args()
+    configName = args.network_type
+    config = getConfig(configName)
     runExp(config, args.im_src_realpart, args.im_tar_realpart, args.im_vel_realX, args.im_vel_realY,args.im_vel_realZ, \
         args.im_src_imaginarypart, args.im_tar_imaginarypart, args.im_vel_imagX, args.im_vel_imagY,args.im_vel_imagZ)
 

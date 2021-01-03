@@ -84,9 +84,9 @@ for k=1:size(FilesV)
     else
     alldataSf(k,:,:)= image2fourier(reshape(alldataS(k,:,:,:),hth,wth));
     alldataSf(k,:,:) = alldataSf(k,:,:)/ (hth*wth);
-    fname_src_R = sprintf('./src_fourier_real/%dsrcRF.mhd', k);
+    fname_src_R = sprintf('./Rnet/src_fourier_real/%dsrcRF.mhd', k);
     writeMETA(reshape(real(alldataSf(k,:,:,:)),hth, wth ),fname_src_R);  
-    fname_src_I = sprintf('./src_fourier_imag/%dsrcIF.mhd', k);
+    fname_src_I = sprintf('./Inet/src_fourier_imag/%dsrcIF.mhd', k);
     writeMETA(reshape(imag(alldataSf(k,:,:,:)),hth, wth ),fname_src_I);  
     end
     

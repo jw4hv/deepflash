@@ -13,9 +13,9 @@ import os, glob
 import numpy as np
 from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
 
-def loadDataVol(inputfilepath):
+def loadDataVol(inputfilepath,targetDim):
     SEG, COR, AXI = [0,1,2]
-    targetDim = 2
+
     for idx, filename in enumerate (sorted(glob.glob(inputfilepath), key=os.path.getmtime)):
         img = sitk.GetArrayFromImage(sitk.ReadImage(filename))
         img = np.rollaxis(img, 0, 3)
@@ -36,15 +36,17 @@ def runExp(config, savemodel, srcreal, tarreal, srcimag, tarimag):
     #2. Set Data
     import numpy as np
     from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
+    if(config['net']['paras']['structure'] =='deepflash3D'):
+        targetDim = 3 
+    else:
+        targetDim = 2
     #3. Load testing data
-    SEG, COR, AXI = [0,1,2]
-    targetDim = 2
     ##################LOAD REAL NET DATA##########################
-    input_src_data_R = loadDataVol(srcreal)
-    input_tar_data_R = loadDataVol(tarreal)
+    input_src_data_R = loadDataVol(srcreal,targetDim)
+    input_tar_data_R = loadDataVol(tarreal,targetDim)
     ##################LOAD IMAG NET DATA##########################
-    input_src_data_I = loadDataVol(srcimag)
-    input_tar_data_I = loadDataVol(tarimag)
+    input_src_data_I = loadDataVol(srcimag,targetDim)
+    input_tar_data_I = loadDataVol(tarimag,targetDim)
     from torchvision import transforms
     from fileIO.io import safeDivide
     #4. Add transformation
@@ -66,17 +68,16 @@ def runExp(config, savemodel, srcreal, tarreal, srcimag, tarimag):
     # #%% 7. Testing
     predictions = deepflashnet.pred(dataset= testing, scale = 1)
 if __name__ == "__main__":
-
-    configName = 'deepflash'
-    config = getConfig(configName)
     parser = argparse.ArgumentParser()
+    parser.add_argument('--network_type', type=str, help="choosing 2D or 3D network")
     parser.add_argument('--saved_model', type=str, help="root directory of trained model")
     parser.add_argument('--im_src_realpart', type=str, help="root directory of real parts of source images")
     parser.add_argument('--im_tar_realpart', type=str, help="root directory of real parts of target images")
     parser.add_argument('--im_src_imaginarypart', type=str, help="root directory of imaginary parts of source images")
     parser.add_argument('--im_tar_imaginarypart', type=str, help="root directory of imaginary parts of target images")
-    
     args,unknown= parser.parse_known_args()
+    configName = args.network_type
+    config = getConfig(configName)
     runExp(config, args.saved_model, args.im_src_realpart, args.im_tar_realpart, \
         args.im_src_imaginarypart, args.im_tar_imaginarypart)
 

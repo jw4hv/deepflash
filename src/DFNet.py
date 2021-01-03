@@ -103,7 +103,7 @@ def get3DNet(paras):
         encoder = nn.Sequential(
             nn.Conv3d(1, 16, 3, stride=2, padding=2, bias = True),  # Large kernel size, large output feature map, and with dense stride
             nn.BatchNorm3d(16),
-        nn.ReLU(),
+            nn.ReLU(),
            
             nn.Conv3d(16, 16, 3, stride=2, padding=1, bias = True), 
             nn.BatchNorm3d(16),
@@ -189,33 +189,3 @@ def get3DNet(paras):
 
 from src.Layers import CoordConv3d
 #from Layers import CoordConv3d
-
-
-
-    
-if __name__  == '__main__':    
-    import numpy as np
-    config = {'type': 'AECV3D',
-              'paras': {
-              'structure': 'default',
-              'batchNorm': True,
-              'root_feature_num':16}}
-    config2 = {'type': 'DeepCC',
-              'paras': {
-              'structure': 'complex',
-              'batchNorm': True,
-              'root_feature_num':16}}
-    ae = getDFNET(config)
-    ae2 = getDFNET(config2)
-    data_shape = (1, 1, 128,128, 128)
-    src = np.random.rand(*data_shape).astype(np.float32)
-    tar = np.random.rand(*data_shape).astype(np.float32)
- 
-    config3 = {'type': 'DF',
-              'paras': {
-              'structure': 'deepflash',
-              'batchNorm': True,
-              'root_feature_num':16}}
-    ae3 = getDFNET (config3)
-    output = ae3.forward(torch.from_numpy(src), torch.from_numpy(tar) ).detach().numpy()
-    print(output.shape)

@@ -1,7 +1,9 @@
 #!/bin/bash
+#Network type: "deepflash" or "deepflash3D";
 #Path example: "./data/Rnet/tar_fourier_real/*.mhd"
 
-python3 ./src/DeepFLASH_training.py --im_src_realpart  "Directory path of real frequencies for source images" \
+python3 ./src/DeepFLASH_training.py --network_type "network type" \
+--im_src_realpart  "Directory path of real frequencies for source images" \
 --im_tar_realpart "Directory path of real frequencies for target images" \
 --im_vel_realX "Directory path of real frequencies for velocity fields (X direction)" \
 --im_vel_realY "Directory path of real frequencies for velocity fields (Y direction)" \

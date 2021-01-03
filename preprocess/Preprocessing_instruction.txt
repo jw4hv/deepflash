@@ -1,0 +1,20 @@
+******************* DeepFLASH: Preprocessing ******************* 
+Steps:
+i).
+	mkdir target
+	mkdir source
+	mkdir velocity
+
+ii). Put source, target and velocity fields into three folders above respectively; 
+
+################## Extract frequencies #########################
+iii). Run "Processmhd.m", and two folders (Rnet and Inet)include frequencies will be generated under the current directory; 
+
+################## Ready to train and test ######################
+iv). Input the path of subfolders of Rnet and Inet into "/DeepFLASH/runDeepFLASH_training.h" or "/DeepFLASH/runDeepFLASH_testing.h". 
+
+
+
+
+
+
