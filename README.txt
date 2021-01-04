@@ -22,7 +22,7 @@ Jian Wang, Miaomiao Zhang. IEEE Conference on Computer Vision and Pattern Recogn
 
 ************************** Setup ************************** 
 * [PyTorch 3.4](http://pytorch.org/)
-* [PyCA](https://bitbucket.org/scicompanat/pyca) (optional)
+* [PyCA](https://bitbucket.org/scicompanat/pyca) 
 * [FLASH] (https://bitbucket.org/FlashC/flashc/src/master/)
 * [CUDA 9.0](https://developer.nvidia.com/cuda-downloads)
 * [Anaconda 4.3.1](https://anaconda.org)
