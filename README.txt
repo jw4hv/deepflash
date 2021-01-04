@@ -41,7 +41,8 @@ cd DeepFLASH/
 sh runDeepFLASH.sh
 
 python3 DeepFLASH_train.py -h
-
+  --network_type 
+                        specify network type
   --im_src_realpart IM_SRC_REALPART
                         root directory of real parts of source images
   --im_tar_realpart IM_TAR_REALPART
@@ -72,7 +73,8 @@ python3 DeepFLASH_train.py -h
 
 ========================= Testing ========================
 python3 DeepFLASH_test.py -h
-
+--network_type 
+                        specify network type
 --saved_model 
                         root directory of the saved model
 --im_src_realpart IM_SRC_REALPART
