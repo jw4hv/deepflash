@@ -73,9 +73,3 @@ class CoordConv3d(CoordConvBase):
                  self.padding, self.dilation, self.groups,
                  self.bias, self.padding_mode).to(device = input.device)(x)
         return x
-
-#%%
-#def testF(**args):
-#    print(*args)
-#    
-#testF(a=1, b=2)

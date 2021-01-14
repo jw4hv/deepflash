@@ -5,9 +5,9 @@ This repository contains source code and data of a predictive diffeomorphic imag
 ************************** Disclaimer ************************** 
 This software is published for academic and non-commercial use only.
 
-The implementation includes network training, testing and for 2D and 3D medical image registration. We request you to cite our research paper if you use it:
+The implementation includes network training, testing for 2D and 3D medical image registration. We request you to cite our research paper if you use it:
 
-DeepFLASH: An Efficient Network for Learning-basedMedical Image Registration.
+DeepFLASH: An Efficient Network for Learning-based Medical Image Registration.
 Jian Wang, Miaomiao Zhang. IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2020.
 
 ```
@@ -22,7 +22,7 @@ Jian Wang, Miaomiao Zhang. IEEE Conference on Computer Vision and Pattern Recogn
 
 ************************** Setup ************************** 
 * [PyTorch 3.4](http://pytorch.org/)
-* [PyCA](https://bitbucket.org/scicompanat/pyca) (optional)
+* [PyCA](https://bitbucket.org/scicompanat/pyca) 
 * [FLASH] (https://bitbucket.org/FlashC/flashc/src/master/)
 * [CUDA 9.0](https://developer.nvidia.com/cuda-downloads)
 * [Anaconda 4.3.1](https://anaconda.org)
@@ -41,7 +41,8 @@ cd DeepFLASH/
 sh runDeepFLASH.sh
 
 python3 DeepFLASH_train.py -h
-
+  --network_type 
+                        specify network type
   --im_src_realpart IM_SRC_REALPART
                         root directory of real parts of source images
   --im_tar_realpart IM_TAR_REALPART
@@ -72,7 +73,8 @@ python3 DeepFLASH_train.py -h
 
 ========================= Testing ========================
 python3 DeepFLASH_test.py -h
-
+--network_type 
+                        specify network type
 --saved_model 
                         root directory of the saved model
 --im_src_realpart IM_SRC_REALPART
