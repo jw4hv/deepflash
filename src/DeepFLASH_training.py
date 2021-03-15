@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import SimpleITK as sitk
 import os, glob
 import numpy as np
-from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
+
 
 def loadDataVol(inputfilepath, targetDim):
     SEG, COR, AXI = [0,1,2]

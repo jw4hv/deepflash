@@ -1,4 +1,5 @@
 clear all;
+addpath(genpath('./code/'));
 %%%%%%%%%%%% Source, target and velocity fields directories%%%%%%%%%%%%%%%% 
 FilesV=dir('./velocity/*.mhd');
 FilesS=dir('./source/*.mhd');
