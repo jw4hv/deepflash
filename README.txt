@@ -38,7 +38,7 @@ You may also run other registration algorithm to estimate the initial velocity f
 Steps: 
 
 cd DeepFLASH/
-sh runDeepFLASH.sh
+sh runDeepFLASH_training.sh
 
 python3 DeepFLASH_train.py -h
   --network_type 
@@ -72,6 +72,8 @@ python3 DeepFLASH_train.py -h
 
 
 ========================= Testing ========================
+sh runDeepFLASH_testing.sh
+
 python3 DeepFLASH_test.py -h
 --network_type 
                         specify network type
