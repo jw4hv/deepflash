@@ -60,7 +60,7 @@ def runExp(config, srcreal, tarreal, velxreal, velyreal, velzreal, srcimag, tari
     from torchvision import transforms
     from fileIO.io import safeDivide
     #4. Add transformation
-    xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) 
+    #xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) 
     trans3DTF2Torch = lambda img: np.moveaxis(img, -1, 0)
     img_transform = transforms.Compose([
         xNorm,
