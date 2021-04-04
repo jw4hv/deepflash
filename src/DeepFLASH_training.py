@@ -55,7 +55,7 @@ def runExp(config, srcreal, tarreal, velxreal, velyreal, velzreal, srcimag, tari
     input_vel_data_x_I = loadDataVol(velximag,targetDim)
     input_vel_data_y_I = loadDataVol(velyimag,targetDim)
     input_vel_data_z_I = loadDataVol(velzimag,targetDim)
-    input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_y_I ), axis = targetDim+1)
+    input_vel_data_I = np.concatenate((input_vel_data_x_I, input_vel_data_y_I,input_vel_data_z_I ), axis = targetDim+1)
     print ('Training Data loaded!')
     from torchvision import transforms
     from fileIO.io import safeDivide

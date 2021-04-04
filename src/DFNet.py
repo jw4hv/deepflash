@@ -137,8 +137,6 @@ def get3DNet(paras):
             nn.BatchNorm3d(8),
         nn.ReLU(),
             nn.Conv3d(8, 3, 3, stride=1, padding=1,bias = True), 
-            nn.BatchNorm3d(3),
-        nn.ReLU(),
         )
     elif paras['structure'] == 'deepflash':
 ##########################2D Net#################################################
@@ -179,9 +177,6 @@ def get3DNet(paras):
             nn.PReLU(),
 
             nn.Conv2d(8, 3, 7, stride=1, padding=1,bias = True),  
-            nn.BatchNorm2d(3), 
-            nn.PReLU(),
-            # nn.tempsigmoid(out),
         )
 
     return encoder, decoder
