@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 import SimpleITK as sitk
 import os, glob
 import numpy as np
-
+from fileIO.io import safeLoadMedicalImg, convertTensorformat, loadData2
 
 def loadDataVol(inputfilepath, targetDim):
     SEG, COR, AXI = [0,1,2]
@@ -60,13 +60,20 @@ def runExp(config, srcreal, tarreal, velxreal, velyreal, velzreal, srcimag, tari
     from torchvision import transforms
     from fileIO.io import safeDivide
     #4. Add transformation
-    #xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) 
+    '''Add normalization before feeding into model'''
+    # xNorm = lambda img : safeDivide(img - np.min(img), (np.max(img) - np.min(img))) 
+    # trans3DTF2Torch = lambda img: np.moveaxis(img, -1, 0)
+    # img_transform = transforms.Compose([
+    #     xNorm,
+    #     trans3DTF2Torch
+    # #    transforms.ToTensor()
+    # ])
+    '''Without normalization before feeding into model'''
     trans3DTF2Torch = lambda img: np.moveaxis(img, -1, 0)
     img_transform = transforms.Compose([
-        xNorm,
         trans3DTF2Torch
-    #    transforms.ToTensor()
     ])
+
     from src.DataSet import DataSet2D, DataSetDeep, DataSetDeepPred
     training = DataSetDeep (source_data_R = input_src_data_R, target_data_R = input_tar_data_R,  groundtruth_R = input_vel_data_R, source_data_I = input_src_data_I, target_data_I = input_tar_data_I,  groundtruth_I = input_vel_data_I, transform=img_transform, device = device  )
     testing = DataSetDeep(source_data_R = input_src_data_R, target_data_R = input_tar_data_R,  groundtruth_R = input_vel_data_R, source_data_I = input_src_data_I, target_data_I = input_tar_data_I,  groundtruth_I = input_vel_data_I, transform=img_transform, device = device )

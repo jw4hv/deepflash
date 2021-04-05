@@ -166,7 +166,6 @@ def get3DNet(paras):
             nn.PReLU(),
 
             nn.Conv2d(8, 16, 5, stride=1, padding=1,bias = True),
-             
             nn.BatchNorm2d(16),
             nn.PReLU(),
 
@@ -176,7 +175,7 @@ def get3DNet(paras):
             nn.Dropout(0.2),
             nn.PReLU(),
 
-            nn.Conv2d(8, 3, 7, stride=1, padding=1,bias = True),  
+            nn.Conv2d(8, 3, 3, stride=1, padding=1,bias = True),  
         )
 
     return encoder, decoder
